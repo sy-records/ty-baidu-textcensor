@@ -33,7 +33,7 @@
 
 ### WordPress
 
-在 WordPress 后台搜索 `Baidu TextCensor`
+在 WordPress 后台安装插件页面搜索 `Baidu TextCensor`
 
 项目地址：[https://github.com/sy-records/wp-baidu-textcensor](https://github.com/sy-records/wp-baidu-textcensor)
 
