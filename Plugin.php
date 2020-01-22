@@ -1,7 +1,7 @@
 <?php
 
 /**
- * 在 Typecho 中加入百度文本内容审核，过滤评论中的敏感内容；<br/> 支持请在 <a href="https://github.com/sy-records/BaiduTextcensor" target="_blank">Github</a> 点个 Star，Watch 关注更新。
+ * 在 Typecho 中加入百度文本内容审核，过滤评论中的敏感内容；<br/> 支持请在 <a href="https://github.com/sy-records/ty-baidu-textcensor" target="_blank">Github</a> 点个 Star，Watch 关注更新。
  *
  * @package BaiduTextcensor
  * @author 沈唁
