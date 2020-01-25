@@ -3,7 +3,7 @@
 /**
  * 在 Typecho 中加入百度文本内容审核，过滤评论中的敏感内容；<br/> 支持请在 <a href="https://github.com/sy-records/ty-baidu-textcensor" target="_blank">Github</a> 点个 Star，Watch 关注更新。
  *
- * @package BaiduTextcensor
+ * @package BaiduTextCensor
  * @author 沈唁
  * @version 1.0.0
  * @link https://qq52o.me
