@@ -8,7 +8,7 @@
  * @version 1.0.0
  * @link https://qq52o.me
  */
-class BaiduTextcensor_Plugin implements Typecho_Plugin_Interface
+class BaiduTextCensor_Plugin implements Typecho_Plugin_Interface
 {
     /**
      * @return mixed
