@@ -23,7 +23,7 @@
 
 1. 从 [Github](https://github.com/sy-records/ty-baidu-textcensor/releases) 下载源码，将源码上传到 Typecho 插件目录 `usr/plugins`
 
-2. 修改插件名称为`BaiduTextCensor`
+2. 修改插件文件名为`BaiduTextCensor`
 
 3. 修改目录权限和用户组
 
