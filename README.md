@@ -21,7 +21,18 @@
 
 ### 安装
 
-从 Github 下载源码，将源码上传到 Typecho 插件目录 `usr/plugins`，**必须修改文件名为`BaiduTextCensor`**，然后在后台启用
+1. 从 [Github](https://github.com/sy-records/ty-baidu-textcensor/releases) 下载源码，将源码上传到 Typecho 插件目录 `usr/plugins`
+
+2. 修改插件名称为`BaiduTextCensor`
+
+3. 修改目录权限和用户组
+
+```bash
+chown -R www:www BaiduTextCensor/
+chmod 755 BaiduTextCensor/runtime
+```
+
+4. 启用~
 
 ### 设置
 
