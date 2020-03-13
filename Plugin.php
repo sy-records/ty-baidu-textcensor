@@ -5,7 +5,7 @@
  *
  * @package BaiduTextCensor
  * @author 沈唁
- * @version 1.0.0
+ * @version 1.0.1
  * @link https://qq52o.me
  */
 class BaiduTextCensor_Plugin implements Typecho_Plugin_Interface
@@ -34,7 +34,7 @@ class BaiduTextCensor_Plugin implements Typecho_Plugin_Interface
      */
     public static function deactivate()
     {
-        return _t('BaiduTextcensor 插件已禁用成功！');
+        return _t('BaiduTextCensor 插件已禁用成功！');
     }
 
     /**
@@ -69,11 +69,11 @@ class BaiduTextCensor_Plugin implements Typecho_Plugin_Interface
     {
         $options = Typecho_Widget::widget('Widget_Options');
 
-        $app_id = $options->plugin('BaiduTextcensor')->app_id;
-        $api_key = $options->plugin('BaiduTextcensor')->api_key;
-        $secret_key = $options->plugin('BaiduTextcensor')->secret_key;
+        $app_id = $options->plugin('BaiduTextCensor')->app_id;
+        $api_key = $options->plugin('BaiduTextCensor')->api_key;
+        $secret_key = $options->plugin('BaiduTextCensor')->secret_key;
 
-        $is_check_admin = $options->plugin('BaiduTextcensor')->is_check_admin;
+        $is_check_admin = $options->plugin('BaiduTextCensor')->is_check_admin;
         if (!$is_check_admin) {
             $userObj = Typecho_Widget::widget('Widget_User');
             if($userObj->hasLogin() && $userObj->pass('administrator', true)) {
