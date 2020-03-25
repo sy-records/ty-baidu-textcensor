@@ -44,7 +44,7 @@ chmod 755 BaiduTextCensor/runtime
 
 ### WordPress
 
-在 WordPress 后台安装插件页面搜索 `Baidu TextCensor`
+在 WordPress 后台安装插件页面搜索 `Baidu TextCensor For Comments`
 
 项目地址：[https://github.com/sy-records/wp-baidu-textcensor](https://github.com/sy-records/wp-baidu-textcensor)
 
