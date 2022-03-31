@@ -1,11 +1,11 @@
 <?php
 
 /**
- * 在 Typecho 中加入百度文本内容审核，过滤评论中的敏感内容；<br/> 支持请在 <a href="https://github.com/sy-records/ty-baidu-textcensor" target="_blank">Github</a> 点个 Star，Watch 关注更新。
+ * 在 Typecho 中加入百度文本内容审核，过滤评论中的敏感内容；<br/> 支持请在 <a href="https://github.com/sy-records/ty-baidu-textcensor" target="_blank">GitHub</a> 点个 Star，Watch 关注更新。
  *
  * @package BaiduTextCensor
  * @author 沈唁
- * @version 1.0.1
+ * @version 1.0.2
  * @link https://qq52o.me
  */
 class BaiduTextCensor_Plugin implements Typecho_Plugin_Interface
@@ -86,6 +86,12 @@ class BaiduTextCensor_Plugin implements Typecho_Plugin_Interface
         }
         $client = new Luffy\TextCensor\AipBase($app_id, $api_key, $secret_key);
         $res = $client->textCensorUserDefined($comment['text']);
+
+        if (isset($res['error_code'])) {
+            $comment['status'] = 'waiting';
+            goto delete;
+        }
+
         if ($res['conclusionType'] == 2) {
             Typecho_Cookie::set('__typecho_remember_text', $comment['text']);
             throw new Typecho_Widget_Exception("评论内容" . $res['data'][0]['msg'] . "，请重新评论");
@@ -93,6 +99,8 @@ class BaiduTextCensor_Plugin implements Typecho_Plugin_Interface
             // 疑似和失败的写数据库，人工审核
             $comment['status'] = 'waiting';
         }
+
+        delete:
         Typecho_Cookie::delete('__typecho_remember_text');
         return $comment;
     }
