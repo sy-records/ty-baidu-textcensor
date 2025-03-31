@@ -58,56 +58,58 @@ class AipBase
      */
     public function __construct($appId, $apiKey, $secretKey)
     {
-        $this->appId = trim($appId);
-        $this->apiKey = trim($apiKey);
+        $this->appId     = trim($appId);
+        $this->apiKey    = trim($apiKey);
         $this->secretKey = trim($secretKey);
     }
 
     /**
      * Api 请求
      * @param string $url
-     * @param mixed $data
-     * @return mixed
+     * @param array  $data
+     * @param array  $headers
+     * @return array
      */
-    protected function request($url, $data, $headers = array())
+    protected function request($url, $data, $headers = [])
     {
         try {
-            $params = array();
-            $authObj = $this->auth();
+            $params      = [];
+            $authContent = $this->auth();
             if ($this->isCloudUser === false) {
-                $params['access_token'] = $authObj['access_token'];
+                $params['access_token'] = $authContent['access_token'];
             }
-            $params['aipSdk'] = 'php';
+            $params['aipSdk']        = 'php';
             $params['aipSdkVersion'] = $this->version;
-            $response = $this->baiduRequest($url . "?" . http_build_query($params), $data, 1);
+            $response                = $this->baiduWpRequest($url . '?' . http_build_query($params), $data, 1);
 
-            $obj = $this->proccessResult($response['content']);
-            if (!$this->isCloudUser && isset($obj['error_code']) && $obj['error_code'] == 110) {
-                $authObj = $this->auth(true);
-                $params['access_token'] = $authObj['access_token'];
-                $response = $this->baiduRequest($url . "?" . http_build_query($params), $data, 1);
-                $obj = $this->proccessResult($response['content']);
+            $result = $this->processResult($response['content']);
+            if (!$this->isCloudUser && isset($result['error_code']) && $result['error_code'] == 110) {
+                $authContent            = $this->auth(true);
+                $params['access_token'] = $authContent['access_token'];
+                $response               = $this->baiduWpRequest($url . '?' . http_build_query($params), $data, 1);
+                $result                 = $this->processResult($response['content']);
             }
 
-            if (empty($obj) || !isset($obj['error_code'])) {
-                $this->writeAuthObj($authObj);
+            if (empty($result) || !isset($result['error_code'])) {
+                $this->writeAuth($authContent);
             }
         } catch (\Exception $e) {
-            return array(
+            return [
                 'error_code' => 'SDK108',
-                'error_msg' => 'connection or read data timeout',
-            );
+                'error_msg'  => 'connection or read data timeout',
+                'message'    => $e->getMessage(),
+            ];
         }
 
-        return $obj;
+        return $result;
     }
 
     /**
      * 格式化结果
      * @param $content string
-     * @return mixed
+     * @return array
      */
-    protected function proccessResult($content)
+    protected function processResult($content)
     {
         return json_decode($content, true);
     }
@@ -118,38 +120,38 @@ class AipBase
      */
     private function getAuthFilePath()
     {
-        return dirname(__FILE__) . '/runtime/' . md5($this->apiKey);
+        return dirname(__DIR__) . '/runtime/' . md5($this->apiKey);
     }
 
     /**
      * 写入本地文件
-     * @param array $obj
+     * @param array $content
      * @return void
      */
-    private function writeAuthObj($obj)
+    private function writeAuth($content)
     {
-        if ($obj === null || (isset($obj['is_read']) && $obj['is_read'] === true)) {
+        if ($content === null || (isset($content['is_read']) && $content['is_read'] === true)) {
             return;
         }
 
-        $obj['time'] = time();
-        $obj['is_cloud_user'] = $this->isCloudUser;
-        @file_put_contents($this->getAuthFilePath(), json_encode($obj));
+        $content['time']          = time();
+        $content['is_cloud_user'] = $this->isCloudUser;
+        @file_put_contents($this->getAuthFilePath(), json_encode($content));
     }
 
     /**
      * 读取本地缓存
-     * @return array
+     * @return array|null
      */
-    private function readAuthObj()
+    private function readAuth()
     {
         $content = @file_get_contents($this->getAuthFilePath());
         if ($content !== false) {
-            $obj = json_decode($content, true);
-            $this->isCloudUser = $obj['is_cloud_user'];
-            $obj['is_read'] = true;
-            if ($this->isCloudUser || $obj['time'] + $obj['expires_in'] - 30 > time()) {
-                return $obj;
+            $result            = json_decode($content, true);
+            $this->isCloudUser = $result['is_cloud_user'];
+            $result['is_read'] = true;
+            if ($this->isCloudUser || $result['time'] + $result['expires_in'] - 30 > time()) {
+                return $result;
             }
         }
 
@@ -164,91 +166,88 @@ class AipBase
     public function auth($refresh = false)
     {
         if (!$refresh) {
-            $obj = $this->readAuthObj();
-            if (!empty($obj)) {
-                return $obj;
+            $result = $this->readAuth();
+            if (!empty($result)) {
+                return $result;
             }
         }
 
-        $response = $this->baiduRequest(
+        $response = $this->baiduWpRequest(
             $this->accessTokenUrl,
-            array(
-                'grant_type' => 'client_credentials',
-                'client_id' => $this->apiKey,
+            [
+                'grant_type'    => 'client_credentials',
+                'client_id'     => $this->apiKey,
                 'client_secret' => $this->secretKey,
-            )
+            ]
         );
 
-        $obj = json_decode($response['content'], true);
+        $result = json_decode($response['content'], true);
 
-        $this->isCloudUser = !$this->isPermission($obj);
-        return $obj;
+        $this->isCloudUser = !$this->isPermission($result);
+        return $result;
     }
 
     /**
      * 判断认证是否有权限
-     * @param array $authObj
-     * @return boolean
+     * @param array $authContent
+     * @return bool
      */
-    protected function isPermission($authObj)
+    protected function isPermission($authContent)
     {
-        if (empty($authObj) || !isset($authObj['scope'])) {
+        if (empty($authContent) || !isset($authContent['scope'])) {
             return false;
         }
 
-        $scopes = explode(' ', $authObj['scope']);
+        $scopes = explode(' ', $authContent['scope']);
 
         return in_array($this->scope, $scopes);
     }
 
     /**
-     * @param $url
-     * @param string $params
-     * @param int $ispost
-     * @return bool|string
+     * @param              $url
+     * @param array|string $params
+     * @param int          $ispost
+     * @return array
      */
-    private function baiduRequest($url, $params = "", $ispost = 0)
+    private function baiduWpRequest($url, $params = '', $ispost = 0)
     {
-        $params = is_array($params) ? http_build_query($params) : $params;
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 60);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 60);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+        $args = array(
+            'timeout' => '15'
+        );
         if ($ispost) {
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
-            curl_setopt($ch, CURLOPT_URL, $url);
+            $args['body'] = $params;
+            $response     = wp_remote_post($url, $args);
         } else {
+            $params = is_array($params) ? http_build_query($params) : $params;
             if ($params) {
-                curl_setopt($ch, CURLOPT_URL, $url . '?' . $params);
+                $response = wp_remote_get($url . '?' . $params, $args);
             } else {
-                curl_setopt($ch, CURLOPT_URL, $url);
+                $response = wp_remote_get($url, $args);
             }
         }
-        $response = curl_exec($ch);
-        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-        if ($code === 0) {
-            throw new \Exception(curl_error($ch));
+        $body = '';
+        if (is_array($response) && !is_wp_error($response) && $response['response']['code'] == '200') {
+            $body = $response['body'];
         }
-
-        curl_close($ch);
-        return array(
-            'code' => $code,
-            'content' => $response,
-        );
+        return ['content' => $body];
     }
+
     /**
-     * @param $message
-     * @return mixed
+     * @param string $message
+     * @param string $email
+     * @param string $ip
+     * @return array
      */
-    public function textCensorUserDefined($message)
+    public function textCensorUserDefined($message, $email = '', $ip = '')
     {
-        $data = array();
+        $data         = [];
         $data['text'] = $message;
+        if (!empty($email)) {
+            $data['userId'] = $email;
+        }
+        if (!empty($ip)) {
+            $data['userIp'] = $ip;
+        }
         return $this->request($this->textCensorUserDefinedUrl, $data);
     }
 }

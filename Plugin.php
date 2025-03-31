@@ -5,7 +5,7 @@
  *
  * @package BaiduTextCensor
  * @author 沈唁
- * @version 1.0.2
+ * @version 1.1.0
  * @link https://qq52o.me
  */
 class BaiduTextCensor_Plugin implements Typecho_Plugin_Interface
@@ -23,9 +23,9 @@ class BaiduTextCensor_Plugin implements Typecho_Plugin_Interface
         if (!function_exists('curl_init')) {
             $error = '<br /><strong>' . _t('此插件需要开启 curl 扩展') . '</strong>';
         }
-        Typecho_Plugin::factory('Widget_Feedback')->comment = array(__CLASS__, 'checkComment');
-        Typecho_Plugin::factory('Widget_Feedback')->trackback = array(__CLASS__, 'checkComment');
-        Typecho_Plugin::factory('Widget_XmlRpc')->pingback = array(__CLASS__, 'checkComment');
+        Typecho_Plugin::factory('Widget_Feedback')->comment = [__CLASS__, 'checkComment'];
+        Typecho_Plugin::factory('Widget_Feedback')->trackback = [__CLASS__, 'checkComment'];
+        Typecho_Plugin::factory('Widget_XmlRpc')->pingback = [__CLASS__, 'checkComment'];
         return _t('请在插件设置里设置百度内容审核的信息，以使插件正常使用！') . $error;
     }
 
@@ -51,7 +51,7 @@ class BaiduTextCensor_Plugin implements Typecho_Plugin_Interface
         $secret_key = new Typecho_Widget_Helper_Form_Element_Text('secret_key', null, null, _t('Secret Key(*)：'), _t("AppID、API Key、Secret Key在百度 AI 控制台的 <a href='https://console.bce.baidu.com/ai/?fromai=1#/ai/antiporn/app/list' target='_blank'>产品服务 / 内容审核 - 应用列表</a> 创建应用后获取；"));
         $form->addInput($secret_key->addRule('required', _t('Secret Key不能为空！')));
 
-        $is_check_admin = new Typecho_Widget_Helper_Form_Element_Radio('is_check_admin', array('0' => '否', '1' => '是'), '0', _t('是否验证管理员：'), _t('选择“否”将会跳过管理员的评论内容，不去验证！'));
+        $is_check_admin = new Typecho_Widget_Helper_Form_Element_Radio('is_check_admin', ['否', '是'], '0', _t('是否验证管理员：'), _t('选择“否”将会跳过管理员的评论内容，不去验证！'));
         $form->addInput($is_check_admin);
     }
 
@@ -85,7 +85,7 @@ class BaiduTextCensor_Plugin implements Typecho_Plugin_Interface
             require_once 'AipBase.php';
         }
         $client = new Luffy\TextCensor\AipBase($app_id, $api_key, $secret_key);
-        $res = $client->textCensorUserDefined($comment['text']);
+        $res = $client->textCensorUserDefined("{$comment['author']}：{$comment['text']}", $comment['mail'], $comment['ip']);
 
         if (isset($res['error_code'])) {
             $comment['status'] = 'waiting';
