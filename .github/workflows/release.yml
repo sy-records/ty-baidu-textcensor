@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Create .zip archive
+      run: |
+        zip -r BaiduTextCensor.zip runtime AipBase.php LICENSE Plugin.php
+
+    - name: Create .tar.gz archive
+      run: |
+        tar -czvf BaiduTextCensor.tar.gz runtime AipBase.php LICENSE Plugin.php
+
+    - name: Upload release assets
+      if: github.event_name == 'release'
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./BaiduTextCensor.zip
+        asset_name: BaiduTextCensor.zip
+        asset_content_type: application/zip
+
+    - name: Upload release assets
+      if: github.event_name == 'release'
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./BaiduTextCensor.tar.gz
+        asset_name: BaiduTextCensor.tar.gz
+        asset_content_type: application/gzip
+
+    - name: Upload artifact .zip
+      if: github.event_name == 'workflow_dispatch'
+      uses: actions/upload-artifact@v3
+      with:
+        name: BaiduTextCensor-zip
+        path: ./BaiduTextCensor.zip
+        retention-days: 1
+
+    - name: Upload artifact .tar.gz
+      if: github.event_name == 'workflow_dispatch'
+      uses: actions/upload-artifact@v3
+      with:
+        name: BaiduTextCensor-tar-gz
+        path: ./BaiduTextCensor.tar.gz
+        retention-days: 1
