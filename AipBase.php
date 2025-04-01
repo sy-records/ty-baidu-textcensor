@@ -80,13 +80,13 @@ class AipBase
             }
             $params['aipSdk']        = 'php';
             $params['aipSdkVersion'] = $this->version;
-            $response                = $this->baiduWpRequest($url . '?' . http_build_query($params), $data, 1);
+            $response                = $this->baiduRequest($url . '?' . http_build_query($params), $data, true);
 
             $result = $this->processResult($response['content']);
             if (!$this->isCloudUser && isset($result['error_code']) && $result['error_code'] == 110) {
                 $authContent            = $this->auth(true);
                 $params['access_token'] = $authContent['access_token'];
-                $response               = $this->baiduWpRequest($url . '?' . http_build_query($params), $data, 1);
+                $response               = $this->baiduRequest($url . '?' . http_build_query($params), $data, true);
                 $result                 = $this->processResult($response['content']);
             }
 
@@ -172,7 +172,7 @@ class AipBase
             }
         }
 
-        $response = $this->baiduWpRequest(
+        $response = $this->baiduRequest(
             $this->accessTokenUrl,
             [
                 'grant_type'    => 'client_credentials',
@@ -204,32 +204,45 @@ class AipBase
     }
 
     /**
-     * @param              $url
-     * @param array|string $params
-     * @param int          $ispost
+     * @param string $url
+     * @param string|array $params
+     * @param bool $isPost
      * @return array
+     * @throws \Exception
      */
-    private function baiduWpRequest($url, $params = '', $ispost = 0)
+    private function baiduRequest($url, $params = '', $isPost = false)
     {
-        $args = array(
-            'timeout' => '15'
-        );
-        if ($ispost) {
-            $args['body'] = $params;
-            $response     = wp_remote_post($url, $args);
+        $params = is_array($params) ? http_build_query($params) : $params;
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 60);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+        if ($isPost) {
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
+            curl_setopt($ch, CURLOPT_URL, $url);
         } else {
-            $params = is_array($params) ? http_build_query($params) : $params;
             if ($params) {
-                $response = wp_remote_get($url . '?' . $params, $args);
+                curl_setopt($ch, CURLOPT_URL, $url . '?' . $params);
             } else {
-                $response = wp_remote_get($url, $args);
+                curl_setopt($ch, CURLOPT_URL, $url);
             }
         }
-        $body = '';
-        if (is_array($response) && !is_wp_error($response) && $response['response']['code'] == '200') {
-            $body = $response['body'];
+        $response = curl_exec($ch);
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        if ($code === 0) {
+            throw new \Exception(curl_error($ch));
         }
-        return ['content' => $body];
+
+        curl_close($ch);
+        return [
+            'code' => $code,
+            'content' => $response
+        ];
     }
 
     /**

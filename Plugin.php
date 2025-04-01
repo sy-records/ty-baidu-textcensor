@@ -5,7 +5,7 @@
  *
  * @package BaiduTextCensor
  * @author 沈唁
- * @version 1.1.0
+ * @version 1.2.0
  * @link https://qq52o.me
  */
 class BaiduTextCensor_Plugin implements Typecho_Plugin_Interface
